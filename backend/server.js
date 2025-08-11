@@ -11,24 +11,11 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 const app = express();
-const allowedOrigins = [
-  "http://localhost:5173", // Local dev
-  "https://event-taupe-two.vercel.app", // Your main Vercel domain
-  "https://event-git-main-vishnus-projects-330ea5ac.vercel.app" // Preview build
-];
+
 connectDB().catch(err => { console.error('DB connection failed', err); process.exit(1); });
 
 app.use(helmet());
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 
 app.use(passport.initialize());
