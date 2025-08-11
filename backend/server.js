@@ -16,7 +16,7 @@ connectDB().catch(err => { console.error('DB connection failed', err); process.e
 
 app.use(helmet());
 app.use(cors({
-  origin: 'http://localhost:5173' || "https://event-nmfv.onrender.com",
+  origin:  'https://event-nmfv.onrender.com',
   credentials: true
 }));
 app.use(express.json());
