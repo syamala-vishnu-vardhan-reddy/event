@@ -12,7 +12,6 @@ const userRoutes = require('./routes/userRoutes');
 
 const app = express();
 const allowedOrigins = [
-  'http://localhost:5173',
   'https://event-taupe-two.vercel.app'
 ];
 connectDB().catch(err => { console.error('DB connection failed', err); process.exit(1); });
