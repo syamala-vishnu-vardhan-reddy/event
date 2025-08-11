@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:4000",
+  baseURL: "https://event-nmfv.onrender.com",
   withCredentials: true, // optional if backend needs cookies
 });
 
