@@ -14,6 +14,10 @@ import AdminCreateEvent from './pages/AdminCreateEvent'
 import AdminEditEvent from './pages/AdminEditEvent'
 import { useAuth } from './lib/useAuth'
 
+function NotAdmin() {
+  return <div className="text-center text-red-600 mt-10 text-lg font-bold">You must be an admin to access this page.</div>;
+}
+
 export default function App(){
   const { user } = useAuth()
   return (
@@ -28,11 +32,11 @@ export default function App(){
             <Route path="/events" element={<Events/>} />
             <Route path="/events/:id" element={<EventDetail/>} />
             <Route path="/my-bookings" element={ user ? <MyBookings/> : <Navigate to='/login' /> } />
-            <Route path="/admin/events" element={ user?.role==='admin' ? <AdminEvents/> : <Navigate to='/' /> } />
-            <Route path="/admin/events/create" element={ user?.role==='admin' ? <AdminCreateEvent/> : <Navigate to='/' /> } />
-            <Route path="/admin/events/:id/edit" element={ user?.role==='admin' ? <AdminEditEvent/> : <Navigate to='/' /> } />
-            <Route path="/admin/events/:id/bookings" element={ user?.role==='admin' ? <AdminBookings/> : <Navigate to='/' /> } />
-            <Route path="/admin/users" element={ user?.role==='admin' ? <AdminUsers/> : <Navigate to='/' /> } />
+            <Route path="/admin/events" element={ user?.role==='admin' ? <AdminEvents/> : <NotAdmin /> } />
+            <Route path="/admin/events/create" element={ user?.role==='admin' ? <AdminCreateEvent/> : <NotAdmin /> } />
+            <Route path="/admin/events/:id/edit" element={ user?.role==='admin' ? <AdminEditEvent/> : <NotAdmin /> } />
+            <Route path="/admin/events/:id/bookings" element={ user?.role==='admin' ? <AdminBookings/> : <NotAdmin /> } />
+            <Route path="/admin/users" element={ user?.role==='admin' ? <AdminUsers/> : <NotAdmin /> } />
           </Routes>
         </div>
       </main>

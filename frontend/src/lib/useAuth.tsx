@@ -1,42 +1,80 @@
-import { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useContext, createContext, ReactNode } from "react";
 
-type User = { id:string, name:string, email:string, role:string } | null
+type User = { id: string; name: string; email: string; role: string } | null;
 
-export function useAuth(){
-  const [user, setUser] = useState<User>(()=>{
-    try{
-      const s = localStorage.getItem('user')
-      const t = localStorage.getItem('token')
-      // Only restore user if both user and token exist
-      const restoredUser = s && t ? JSON.parse(s) : null
-      console.log('Restored user from localStorage:', restoredUser)
-      return restoredUser
-    }catch(e){ 
-      console.error('Error parsing user from localStorage:', e)
-      return null 
+type AuthContextType = {
+  user: User;
+  setUser: (u: User) => void;
+  logout: () => void;
+};
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User>(() => {
+    try {
+      const adminUser = localStorage.getItem("admin_user");
+      const adminToken = localStorage.getItem("admin_token");
+      const regularUser = localStorage.getItem("user");
+      const regularToken = localStorage.getItem("token");
+      if (adminUser && adminToken) {
+        return JSON.parse(adminUser);
+      }
+      if (regularUser && regularToken) {
+        return JSON.parse(regularUser);
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
-  })
+  });
 
-  useEffect(()=>{
-    console.log('User state changed:', user)
-    if(user) {
-      localStorage.setItem('user', JSON.stringify(user))
-      localStorage.setItem('token', localStorage.getItem('token') || '') // Ensure token is preserved
+  useEffect(() => {
+    if (user) {
+      if (user.role === "admin") {
+        localStorage.setItem("admin_user", JSON.stringify(user));
+        const currentToken =
+          localStorage.getItem("admin_token") ||
+          localStorage.getItem("token") ||
+          "";
+        localStorage.setItem("admin_token", currentToken);
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+      } else {
+        localStorage.setItem("user", JSON.stringify(user));
+        const currentToken =
+          localStorage.getItem("token") ||
+          localStorage.getItem("admin_token") ||
+          "";
+        localStorage.setItem("token", currentToken);
+        localStorage.removeItem("admin_user");
+        localStorage.removeItem("admin_token");
+      }
     } else {
-      localStorage.removeItem('user')
-      localStorage.removeItem('token')
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      localStorage.removeItem("admin_user");
+      localStorage.removeItem("admin_token");
     }
-  }, [user])
+  }, [user]);
 
-  const set = useCallback((u:User) => {
-    console.log('Setting user in useAuth:', u)
-    setUser(u)
-  }, [])
-  
+  const set = useCallback((u: User) => {
+    setUser(u);
+  }, []);
+
   const logout = useCallback(() => {
-    console.log('Logging out user')
-    setUser(null)
-  }, [])
-  
-  return { user, setUser:set, logout }
+    setUser(null);
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, setUser: set, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+  return ctx;
 }
