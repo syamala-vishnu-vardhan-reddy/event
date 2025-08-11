@@ -15,7 +15,10 @@ const app = express();
 connectDB().catch(err => { console.error('DB connection failed', err); process.exit(1); });
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: ["https://event-taupe-two.vercel.app", "http://localhost:5173"],
+  credentials: true
+}));
 app.use(express.json());
 
 app.use(passport.initialize());
