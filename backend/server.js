@@ -16,7 +16,7 @@ connectDB().catch(err => { console.error('DB connection failed', err); process.e
 
 app.use(helmet());
 app.use(cors({
-  origin:  'https://event-taupe-two.vercel.app',
+  origin: ['http://localhost:5173' ,'https://event-taupe-two.vercel.app'],
   credentials: true
 }));
 app.use(express.json());
