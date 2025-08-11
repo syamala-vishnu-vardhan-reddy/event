@@ -11,15 +11,25 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 const app = express();
+const allowedOrigins = ['http://localhost:5173', 'https://your-production-frontend.com'];
 
 connectDB().catch(err => { console.error('DB connection failed', err); process.exit(1); });
 
 app.use(helmet());
 
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    } else {
+      return callback(new Error('Not allowed by CORS'), false);
+    }
+  },
+  credentials: true,
+}));
 
-app.use(cors());
-
-
+app.options('*', cors()); 
 app.use(express.json());
 
 app.use(passport.initialize());
