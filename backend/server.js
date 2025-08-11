@@ -11,14 +11,27 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 const app = express();
-
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://event-taupe-two.vercel.app'
+];
 connectDB().catch(err => { console.error('DB connection failed', err); process.exit(1); });
 
 app.use(helmet());
+
+
 app.use(cors({
-  origin: ["https://event-taupe-two.vercel.app", "http://localhost:5173"],
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps, curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true
 }));
+
 app.use(express.json());
 
 app.use(passport.initialize());
