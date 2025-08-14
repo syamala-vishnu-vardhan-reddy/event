@@ -9,6 +9,7 @@ const authRoutes = require("./routes/authRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const userRoutes = require("./routes/userRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 
 const app = express();
 const allowedOrigins = [
@@ -47,6 +48,7 @@ app.use("/auth", authRoutes);
 app.use("/events", eventRoutes);
 app.use("/bookings", bookingRoutes);
 app.use("/users", userRoutes);
+app.use("/upload", uploadRoutes);
 
 app.get("/", (req, res) => res.send({ ok: true }));
 

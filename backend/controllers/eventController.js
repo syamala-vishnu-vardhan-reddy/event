@@ -3,7 +3,11 @@ const Booking = require('../models/Booking');
 
 const createEvent = async (req, res) => {
   try {
-    const { title, description, date, closingDate, location, capacity, price, image } = req.body;
+    const { title, description, date, closingDate, location, capacity, price } = req.body;
+    
+    // Handle image upload - req.file.path contains the Cloudinary URL
+    const image = req.file ? req.file.path : req.body.image;
+    
     const event = new Event({ title, description, date, closingDate, location, capacity, price, image });
     await event.save();
     res.status(201).json(event);
@@ -15,7 +19,13 @@ const createEvent = async (req, res) => {
 
 const updateEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // Handle image upload - req.file.path contains the Cloudinary URL
+    const updateData = { ...req.body };
+    if (req.file) {
+      updateData.image = req.file.path;
+    }
+    
+    const event = await Event.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!event) return res.status(404).json({ message: 'Event not found' });
     res.json(event);
   } catch (err) {

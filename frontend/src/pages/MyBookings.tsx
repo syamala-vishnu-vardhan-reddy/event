@@ -67,9 +67,7 @@ export default function MyBookings() {
               <h3 className="text-xl font-semibold mb-2 text-gray-800">
                 {booking.event.title}
               </h3>
-              <p className="text-gray-600 text-sm mb-3">
-                {booking.event.description}
-              </p>
+              <div className="text-gray-600 text-sm mb-3" dangerouslySetInnerHTML={{ __html: booking.event.description }} />
 
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">

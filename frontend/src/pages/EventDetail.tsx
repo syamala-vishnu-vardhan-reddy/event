@@ -63,7 +63,7 @@ export default function EventDetail(){
           
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <p className="text-gray-600 mb-6 text-lg">{ev.description}</p>
+              <div className="text-gray-600 mb-6 text-lg" dangerouslySetInnerHTML={{ __html: ev.description }} />
               
               <div className="space-y-3">
                 <div className="flex items-center">

@@ -52,7 +52,7 @@ export default function Events(){
                 </span>
               </div>
               
-              <p className="text-gray-600 text-sm mb-3">{event.description?.slice(0,100)}...</p>
+              <div className="text-gray-600 text-sm mb-3" dangerouslySetInnerHTML={{ __html: event.description?.slice(0,100) + '...' }} />
               
               <div className="space-y-2 text-sm mb-4">
                 <div className="flex justify-between">
