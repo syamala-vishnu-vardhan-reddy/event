@@ -27,7 +27,6 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [descHtml, setDescHtml] = useState("");
 
   const {
     register,
@@ -68,7 +67,6 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
         maxTicketsPerUser: data.maxTicketsPerUser || "",
       });
       setImagePreview(data.image || null);
-      setDescHtml(data.description || "");
     }
   }, [data, reset]);
 
@@ -120,7 +118,7 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
       const eventData = {
         ...eventDataWithoutImage,
         tags: vals.tags ? vals.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
-        description: descHtml || vals.description,
+        description: vals.description,
       };
       
       // Use the new API function that handles image uploads
@@ -137,7 +135,7 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
       const eventData = {
         ...eventDataWithoutImage,
         tags: vals.tags ? vals.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
-        description: descHtml || vals.description,
+        description: vals.description,
       };
       
       // Use the new API function that handles image uploads
@@ -168,11 +166,7 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
     }
   };
 
-  // Rich text handler
-  const handleDescChange = (e: React.FormEvent<HTMLDivElement>) => {
-    setDescHtml(e.currentTarget.innerHTML);
-    setValue("description", e.currentTarget.innerText);
-  };
+
 
   // Preview summary
   const renderPreview = () => (
@@ -189,7 +183,7 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
       <div className="mb-2"><b>Capacity:</b> {watchAll.capacity}</div>
       <div className="mb-2"><b>Price:</b> {watchAll.price}</div>
       <div className="mb-2"><b>Max Tickets Per User:</b> {watchAll.maxTicketsPerUser}</div>
-      <div className="mb-2"><b>Description:</b> <span dangerouslySetInnerHTML={{__html: descHtml || watchAll.description}} /></div>
+      <div className="mb-2"><b>Description:</b> {watchAll.description}</div>
       {imagePreview && <img src={imagePreview} alt="Preview" className="h-24 mt-2 rounded border" />}
     </div>
   );
@@ -324,14 +318,12 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Description (Rich Text)</label>
-          <div
-            contentEditable
-            className="w-full min-h-[80px] p-2 border rounded bg-white"
-            style={{ outline: "none" }}
-            onInput={handleDescChange}
-            dangerouslySetInnerHTML={{ __html: descHtml || watchAll.description || "" }}
-            suppressContentEditableWarning
+          <label className="block text-sm font-medium mb-1">Description</label>
+          <textarea
+            {...register("description")}
+            placeholder="Event description (plain text only)"
+            className="w-full min-h-[80px] p-2 border rounded resize-y"
+            disabled={isSubmitting}
           />
           {errors.description && (
             <p className="text-sm text-red-600">{errors.description.message}</p>
