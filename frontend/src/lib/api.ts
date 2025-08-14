@@ -49,9 +49,13 @@ export const createEventWithImage = async (eventData: any, imageFile?: File): Pr
     formData.append('image', imageFile);
   }
   
+  // Get auth token
+  const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+  
   const response = await API.post('/events', formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${token}`,
     },
   });
   
@@ -74,9 +78,13 @@ export const updateEventWithImage = async (eventId: string, eventData: any, imag
     formData.append('image', imageFile);
   }
   
+  // Get auth token
+  const token = localStorage.getItem('admin_token') || localStorage.getItem('token');
+  
   const response = await API.put(`/events/${eventId}`, formData, {
     headers: {
       'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${token}`,
     },
   });
   

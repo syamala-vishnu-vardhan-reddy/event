@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import API from "../lib/api";
+import API, { createEventWithImage, updateEventWithImage } from "../lib/api";
 import { eventSchema, EventInput } from "../validation/eventSchema";
 
 const CATEGORIES = [
@@ -77,8 +77,13 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
+      // Create a temporary blob URL for preview (this will be cleaned up)
+      const blobUrl = URL.createObjectURL(file);
+      setImagePreview(blobUrl);
       setValue("image", ""); // Clear URL field if uploading
+      
+      // Clean up the blob URL when component unmounts or when file changes
+      return () => URL.revokeObjectURL(blobUrl);
     }
   };
 
@@ -89,61 +94,55 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Simulate image upload (replace with real upload if needed)
+  // Upload image to Cloudinary
   async function uploadImage(file: File): Promise<string> {
-    // TODO: Replace with real upload logic (e.g., to S3, Cloudinary, etc.)
-    // For now, just return a placeholder URL
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(URL.createObjectURL(file)), 1000);
-    });
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await API.post('/upload/image', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      return response.data.imageUrl;
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      throw new Error('Failed to upload image');
+    }
   }
 
   const createM = useMutation(
     async (vals: EventInput) => {
-      let imageUrl = vals.image;
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
-      }
-      const token =
-        localStorage.getItem("admin_token") || localStorage.getItem("token");
-      const res = await API.post(
-        "/events",
-        {
-          ...vals,
-          image: imageUrl,
-          tags: vals.tags ? vals.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
-          description: descHtml || vals.description,
-        },
-        {
-          headers: { Authorization: "Bearer " + token },
-        }
-      );
-      return res.data;
+      // Prepare event data (exclude image field since we handle it separately)
+      const { image, ...eventDataWithoutImage } = vals;
+      const eventData = {
+        ...eventDataWithoutImage,
+        tags: vals.tags ? vals.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
+        description: descHtml || vals.description,
+      };
+      
+      // Use the new API function that handles image uploads
+      const res = await createEventWithImage(eventData, imageFile || undefined);
+      return res;
     },
     { onSuccess: () => qc.invalidateQueries(["events"]) }
   );
 
   const updateM = useMutation(
     async (vals: EventInput) => {
-      let imageUrl = vals.image;
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
-      }
-      const token =
-        localStorage.getItem("admin_token") || localStorage.getItem("token");
-      const res = await API.put(
-        "/events/" + id,
-        {
-          ...vals,
-          image: imageUrl,
-          tags: vals.tags ? vals.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
-          description: descHtml || vals.description,
-        },
-        {
-          headers: { Authorization: "Bearer " + token },
-        }
-      );
-      return res.data;
+      // Prepare event data (exclude image field since we handle it separately)
+      const { image, ...eventDataWithoutImage } = vals;
+      const eventData = {
+        ...eventDataWithoutImage,
+        tags: vals.tags ? vals.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
+        description: descHtml || vals.description,
+      };
+      
+      // Use the new API function that handles image uploads
+      const res = await updateEventWithImage(id!, eventData, imageFile || undefined);
+      return res;
     },
     { onSuccess: () => qc.invalidateQueries(["events"]) }
   );
@@ -339,13 +338,7 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Image</label>
-          <input
-            {...register("image")}
-            placeholder="Image URL (optional)"
-            className="w-full p-2 border rounded mb-2"
-            disabled={isSubmitting || !!imageFile}
-          />
+          <label className="block text-sm font-medium mb-1">Event Image</label>
           <div className="flex items-center space-x-2 mb-2">
             <input
               type="file"
@@ -353,14 +346,29 @@ export default function AdminEventForm({ edit = false }: { edit?: boolean }) {
               ref={fileInputRef}
               onChange={handleImageChange}
               disabled={isSubmitting}
+              className="flex-1"
             />
-            {imagePreview && (
-              <>
-                <img src={imagePreview} alt="Preview" className="h-16 rounded border" />
-                <button type="button" onClick={handleRemoveImage} className="text-xs text-red-600 underline">Remove</button>
-              </>
+            {imageFile && (
+              <button 
+                type="button" 
+                onClick={handleRemoveImage} 
+                className="px-3 py-1 text-xs text-red-600 border border-red-300 rounded hover:bg-red-50"
+              >
+                Remove
+              </button>
             )}
           </div>
+          {imagePreview && (
+            <div className="mb-2">
+              <img src={imagePreview} alt="Preview" className="h-24 w-auto rounded border" />
+              <p className="text-xs text-gray-500 mt-1">
+                {imageFile ? 'New image to upload' : 'Current image'}
+              </p>
+            </div>
+          )}
+          {!imageFile && !imagePreview && (
+            <p className="text-sm text-gray-500">No image selected</p>
+          )}
         </div>
         <div className="flex space-x-2">
           <button
